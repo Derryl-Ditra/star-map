@@ -12,22 +12,39 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
   margin: 0;
   padding: 0;
   overflow: hidden;
-  /* Disable browser gestures for toddlers */
   touch-action: none;
   user-select: none;
   -webkit-user-select: none;
   -webkit-touch-callout: none;
 }
 
-/* Glowing effect for icons */
-.icon-glow {
-  filter: drop-shadow(0 0 15px rgba(253, 224, 71, 0.6));
+/* Starry Background */
+.space-bg {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+  background-image: url('/planets/background.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  opacity: 0.05;
 }
 
-.icon-glow-white {
-  filter: drop-shadow(0 0 15px rgba(255, 255, 255, 0.4));
+.image-glow {
+  /* Removed glow as per user request to avoid "dark circle" look */
+}
+
+.language-btn {
+  @apply px-3 py-1.5 rounded-full border border-white/20 bg-white/5 backdrop-blur-md transition-all hover:bg-white/20;
+}
+
+.language-btn.active {
+  @apply bg-white/30 border-white/50 font-bold;
 }
