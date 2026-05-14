@@ -3,10 +3,12 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Solar System Explorer",
-  description: "A simple space explorer for toddlers.",
+  description: "A toddler-friendly space explorer",
+  manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
+    title: "Star Map",
   },
 };
 

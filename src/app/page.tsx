@@ -38,20 +38,22 @@ const TRANSLATIONS = {
 };
 
 // --- Data Structure ---
+const BASE_PATH = process.env.NODE_ENV === 'production' ? '/star-map' : '';
+
 const CELESTIAL_BODIES = [
-  { id: "sun", key: "Sun", image: "/planets/sun.png" },
-  { id: "mercury", key: "Mercury", image: "/planets/mercury.png" },
-  { id: "venus", key: "Venus", image: "/planets/venus.png" },
-  { id: "earth", key: "Earth", image: "/planets/earth.png" },
-  { id: "moon", key: "Moon", image: "/planets/moon.png" },
-  { id: "mars", key: "Mars", image: "/planets/mars.png" },
-  { id: "jupiter", key: "Jupiter", image: "/planets/jupiter.png" },
-  { id: "saturn", key: "Saturn", image: "/planets/saturn.png" },
-  { id: "uranus", key: "Uranus", image: "/planets/uranus.png" },
-  { id: "neptune", key: "Neptune", image: "/planets/neptune.png" },
-  { id: "iss", key: "ISS", image: "/planets/iss.png" },
-  { id: "asteroid", key: "Asteroid", image: "/planets/asteroid.png" },
-  { id: "astronaut", key: "Astronaut", image: "/planets/astronaut.png" },
+  { id: "sun", key: "Sun", image: `${BASE_PATH}/planets/sun.png` },
+  { id: "mercury", key: "Mercury", image: `${BASE_PATH}/planets/mercury.png` },
+  { id: "venus", key: "Venus", image: `${BASE_PATH}/planets/venus.png` },
+  { id: "earth", key: "Earth", image: `${BASE_PATH}/planets/earth.png` },
+  { id: "moon", key: "Moon", image: `${BASE_PATH}/planets/moon.png` },
+  { id: "mars", key: "Mars", image: `${BASE_PATH}/planets/mars.png` },
+  { id: "jupiter", key: "Jupiter", image: `${BASE_PATH}/planets/jupiter.png` },
+  { id: "saturn", key: "Saturn", image: `${BASE_PATH}/planets/saturn.png` },
+  { id: "uranus", key: "Uranus", image: `${BASE_PATH}/planets/uranus.png` },
+  { id: "neptune", key: "Neptune", image: `${BASE_PATH}/planets/neptune.png` },
+  { id: "iss", key: "ISS", image: `${BASE_PATH}/planets/iss.png` },
+  { id: "asteroid", key: "Asteroid", image: `${BASE_PATH}/planets/asteroid.png` },
+  { id: "astronaut", key: "Astronaut", image: `${BASE_PATH}/planets/astronaut.png` },
 ];
 
 type Lang = "id" | "en";
@@ -86,7 +88,7 @@ export default function SolarSystemExplorer() {
 
   // Speech function using pre-recorded high-quality files
   const speak = useCallback((planetKey: string) => {
-    const voiceUrl = `/voices/${lang}/${planetKey.toLowerCase()}.mp3`;
+    const voiceUrl = `${BASE_PATH}/voices/${lang}/${planetKey.toLowerCase()}.mp3`;
     const audio = new Audio(voiceUrl);
     audio.volume = 1.0;
     audio.play().catch(() => {
@@ -112,7 +114,7 @@ export default function SolarSystemExplorer() {
     img.src = CELESTIAL_BODIES[nextIndex].image;
     
     // Voice preload
-    const audio = new Audio(`/voices/${lang}/${nextKey.toLowerCase()}.mp3`);
+    const audio = new Audio(`${BASE_PATH}/voices/${lang}/${nextKey.toLowerCase()}.mp3`);
     audio.load();
   }, [currentIndex, lang, currentBody.key, speak]);
 
