@@ -37,17 +37,7 @@ const TRANSLATIONS = {
   },
 };
 
-// --- Path & Environment ---
-const getBasePath = () => {
-  if (typeof window === 'undefined') return '';
-  // Robust detection for GitHub Pages sub-paths
-  const path = window.location.pathname;
-  if (path.includes('/star-map')) return '/star-map';
-  if (path.includes('/animal-looks')) return '/animal-looks';
-  return '';
-};
-
-const BASE_PATH = process.env.NODE_ENV === 'production' ? getBasePath() : '';
+const BASE_PATH = process.env.NODE_ENV === 'production' ? '/star-map' : '';
 
 const CELESTIAL_BODIES = [
   { id: "sun", key: "Sun", image: `${BASE_PATH}/planets/sun.png` },
