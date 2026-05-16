@@ -63,6 +63,8 @@ export default function SolarSystemExplorer() {
   const [direction, setDirection] = useState(0);
   const [lang, setLang] = useState<Lang>("id");
   const [isPulsing, setIsPulsing] = useState(false);
+  const [isBusy, setIsBusy] = useState(false);
+  const isFirstLoad = React.useRef(true);
 
   const currentBody = CELESTIAL_BODIES[currentIndex];
   const t = TRANSLATIONS[lang];
@@ -86,13 +88,14 @@ export default function SolarSystemExplorer() {
     });
   }, [playSound]);
 
-  // Speech function using pre-recorded high-quality files
+  // The "Immediate + Freeze" Rule
   const speak = useCallback((planetKey: string) => {
+    setIsBusy(true); // Lock interaction immediately
+    
     const voiceUrl = `${BASE_PATH}/voices/${lang}/${planetKey.toLowerCase()}.mp3`;
     const audio = new Audio(voiceUrl);
     audio.volume = 1.0;
     audio.play().catch(() => {
-      // Fallback to synthesis if file fails (unlikely)
       if (typeof window !== "undefined" && window.speechSynthesis) {
         const utterance = new SpeechSynthesisUtterance(TRANSLATIONS[lang][planetKey as keyof typeof TRANSLATIONS['id']]);
         utterance.lang = lang === "id" ? "id-ID" : "en-US";
@@ -100,25 +103,32 @@ export default function SolarSystemExplorer() {
         window.speechSynthesis.speak(utterance);
       }
     });
+
+    // Mandatory 1.2s freeze to prevent doom-scrolling
+    setTimeout(() => setIsBusy(false), 1200);
   }, [lang]);
 
+  // The "First Slide" Auto-Trigger and Preloading
   useEffect(() => {
-    speak(currentBody.key);
-    
-    // Preload next image and next voice
+    const delay = isFirstLoad.current ? 400 : 50; // Small delay for smoother start
+    const timer = setTimeout(() => {
+      speak(currentBody.key);
+      isFirstLoad.current = false;
+    }, delay);
+
+    // Preload next assets
     const nextIndex = (currentIndex + 1) % CELESTIAL_BODIES.length;
     const nextKey = CELESTIAL_BODIES[nextIndex].key;
-    
-    // Image preload
     const img = new Image();
     img.src = CELESTIAL_BODIES[nextIndex].image;
-    
-    // Voice preload
     const audio = new Audio(`${BASE_PATH}/voices/${lang}/${nextKey.toLowerCase()}.mp3`);
     audio.load();
+
+    return () => clearTimeout(timer);
   }, [currentIndex, lang, currentBody.key, speak]);
 
   const handleInteraction = () => {
+    if (isBusy) return;
     playSound("https://www.soundjay.com/button/sounds/button-30.mp3");
     speak(currentBody.key);
     setIsPulsing(true);
@@ -168,12 +178,14 @@ export default function SolarSystemExplorer() {
       {/* Navigation Areas */}
       <div 
         className="absolute left-0 top-0 w-[60px] md:w-[120px] h-full z-10 cursor-pointer flex items-center justify-start pl-4 md:pl-8 group" 
+        style={{ pointerEvents: isBusy ? "none" : "auto" }}
         onClick={() => navigate(-1)}
       >
         <div className="text-white/20 group-hover:text-white/70 transition-colors text-2xl md:text-4xl">&larr;</div>
       </div>
       <div 
         className="absolute right-0 top-0 w-[60px] md:w-[120px] h-full z-10 cursor-pointer flex items-center justify-end pr-4 md:pr-8 group" 
+        style={{ pointerEvents: isBusy ? "none" : "auto" }}
         onClick={() => navigate(1)}
       >
         <div className="text-white/20 group-hover:text-white/70 transition-colors text-2xl md:text-4xl">&rarr;</div>
@@ -192,9 +204,10 @@ export default function SolarSystemExplorer() {
             x: { type: "spring", stiffness: 300, damping: 30 },
             opacity: { duration: 0.2 },
           }}
-          drag="x"
+          drag={isBusy ? false : "x"}
           dragConstraints={{ left: 0, right: 0 }}
           onDragEnd={(_, { offset, velocity }) => {
+            if (isBusy) return;
             if (offset.x < -50) navigate(1);
             else if (offset.x > 50) navigate(-1);
           }}
