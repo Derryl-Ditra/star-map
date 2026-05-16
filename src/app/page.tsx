@@ -16,7 +16,7 @@ const TRANSLATIONS = {
     Uranus: "Uranus",
     Neptune: "Neptunus",
     Moon: "Bulan",
-    ISS: "Stasiun Luar Angkasa",
+    ISS: "Satelit",
     Asteroid: "Asteroid",
     Astronaut: "Astronot",
   },
@@ -31,7 +31,7 @@ const TRANSLATIONS = {
     Uranus: "Uranus",
     Neptune: "Neptune",
     Moon: "Moon",
-    ISS: "International Space Station",
+    ISS: "Satellite",
     Asteroid: "Asteroid",
     Astronaut: "Astronaut",
   },
@@ -90,19 +90,20 @@ export default function SolarSystemExplorer() {
 
   // The "Immediate + Freeze" Rule
   const speak = useCallback((planetKey: string, isManualTap = false) => {
-    // Determine lock duration: 1.2s for navigation, 2.5s for manual taps to allow voice to finish
-    const lockDuration = isManualTap ? 2500 : 1200;
+    // Determine lock duration: 1.2s for navigation, 2.0s for manual taps (calmed)
+    const lockDuration = isManualTap ? 2000 : 1200;
     
     setIsBusy(true); // Lock interaction immediately
     
     const voiceUrl = `${BASE_PATH}/voices/${lang}/${planetKey.toLowerCase()}.mp3`;
     const audio = new Audio(voiceUrl);
     audio.volume = 1.0;
+    audio.playbackRate = 0.75; // Slower speed for optimal absorption
     audio.play().catch(() => {
       if (typeof window !== "undefined" && window.speechSynthesis) {
         const utterance = new SpeechSynthesisUtterance(TRANSLATIONS[lang][planetKey as keyof typeof TRANSLATIONS['id']]);
         utterance.lang = lang === "id" ? "id-ID" : "en-US";
-        utterance.rate = 0.7;
+        utterance.rate = 0.75;
         window.speechSynthesis.speak(utterance);
       }
     });
