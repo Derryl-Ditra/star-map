@@ -89,7 +89,10 @@ export default function SolarSystemExplorer() {
   }, [playSound]);
 
   // The "Immediate + Freeze" Rule
-  const speak = useCallback((planetKey: string) => {
+  const speak = useCallback((planetKey: string, isManualTap = false) => {
+    // Determine lock duration: 1.2s for navigation, 2.5s for manual taps to allow voice to finish
+    const lockDuration = isManualTap ? 2500 : 1200;
+    
     setIsBusy(true); // Lock interaction immediately
     
     const voiceUrl = `${BASE_PATH}/voices/${lang}/${planetKey.toLowerCase()}.mp3`;
@@ -104,8 +107,8 @@ export default function SolarSystemExplorer() {
       }
     });
 
-    // Mandatory 1.2s freeze to prevent doom-scrolling
-    setTimeout(() => setIsBusy(false), 1200);
+    // Freeze to prevent doom-scrolling or doom-tapping
+    setTimeout(() => setIsBusy(false), lockDuration);
   }, [lang]);
 
   // The "First Slide" Auto-Trigger and Preloading
@@ -130,7 +133,7 @@ export default function SolarSystemExplorer() {
   const handleInteraction = () => {
     if (isBusy) return;
     playSound("https://www.soundjay.com/button/sounds/button-30.mp3");
-    speak(currentBody.key);
+    speak(currentBody.key, true); // Pass true to trigger the longer 2.5s "Tap Lock"
     setIsPulsing(true);
     setTimeout(() => setIsPulsing(false), 500);
   };
