@@ -94,11 +94,12 @@ export default function SolarSystemExplorer() {
     const lockDuration = isManualTap ? 2000 : 1200;
     
     setIsBusy(true); // Lock interaction immediately
+    if (isManualTap) setIsPulsing(true); // Enlarge during the tap narration
     
     const voiceUrl = `${BASE_PATH}/voices/${lang}/${planetKey.toLowerCase()}.mp3`;
     const audio = new Audio(voiceUrl);
     audio.volume = 1.0;
-    audio.playbackRate = 0.75; // Slower speed for optimal absorption
+    audio.playbackRate = 0.75; 
     audio.play().catch(() => {
       if (typeof window !== "undefined" && window.speechSynthesis) {
         const utterance = new SpeechSynthesisUtterance(TRANSLATIONS[lang][planetKey as keyof typeof TRANSLATIONS['id']]);
@@ -109,7 +110,10 @@ export default function SolarSystemExplorer() {
     });
 
     // Freeze to prevent doom-scrolling or doom-tapping
-    setTimeout(() => setIsBusy(false), lockDuration);
+    setTimeout(() => {
+      setIsBusy(false);
+      setIsPulsing(false); // Return to normal size after narration
+    }, lockDuration);
   }, [lang]);
 
   // The "First Slide" Auto-Trigger and Preloading
@@ -134,9 +138,7 @@ export default function SolarSystemExplorer() {
   const handleInteraction = () => {
     if (isBusy) return;
     playSound("https://www.soundjay.com/button/sounds/button-30.mp3");
-    speak(currentBody.key, true); // Pass true to trigger the longer 2.5s "Tap Lock"
-    setIsPulsing(true);
-    setTimeout(() => setIsPulsing(false), 500);
+    speak(currentBody.key, true); 
   };
 
   const variants = {
@@ -228,10 +230,10 @@ export default function SolarSystemExplorer() {
               initial={{ rotate: -5 }}
               animate={{ 
                 rotate: 0,
-                scale: isPulsing ? 1.05 : 1,
+                scale: isPulsing ? 1.15 : 1,
               }}
               transition={{ 
-                scale: { type: "spring", stiffness: 400, damping: 10 },
+                scale: { type: "spring", stiffness: 200, damping: 20 },
                 rotate: { duration: 0.5 }
               }}
             />
