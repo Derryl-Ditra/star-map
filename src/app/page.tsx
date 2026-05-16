@@ -37,8 +37,17 @@ const TRANSLATIONS = {
   },
 };
 
-// --- Data Structure ---
-const BASE_PATH = process.env.NODE_ENV === 'production' ? '/star-map' : '';
+// --- Path & Environment ---
+const getBasePath = () => {
+  if (typeof window === 'undefined') return '';
+  // Robust detection for GitHub Pages sub-paths
+  const path = window.location.pathname;
+  if (path.includes('/star-map')) return '/star-map';
+  if (path.includes('/animal-looks')) return '/animal-looks';
+  return '';
+};
+
+const BASE_PATH = process.env.NODE_ENV === 'production' ? getBasePath() : '';
 
 const CELESTIAL_BODIES = [
   { id: "sun", key: "Sun", image: `${BASE_PATH}/planets/sun.png` },
@@ -65,6 +74,8 @@ export default function SolarSystemExplorer() {
   const [isPulsing, setIsPulsing] = useState(false);
   const [isBusy, setIsBusy] = useState(false);
   const isFirstLoad = React.useRef(true);
+  const audioRef = React.useRef<HTMLAudioElement | null>(null);
+  const timeoutRef = React.useRef<NodeJS.Timeout | null>(null);
 
   const currentBody = CELESTIAL_BODIES[currentIndex];
   const t = TRANSLATIONS[lang];
@@ -77,6 +88,13 @@ export default function SolarSystemExplorer() {
   }, []);
 
   const navigate = useCallback((newDirection: number) => {
+    // Clear any existing locks/audio when navigating manually
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current = null;
+    }
+    
     playSound("https://www.soundjay.com/misc/sounds/whoosh-01.mp3");
     setDirection(newDirection);
     setCurrentIndex((prev) => {
@@ -90,14 +108,20 @@ export default function SolarSystemExplorer() {
 
   // The "Immediate + Freeze" Rule
   const speak = useCallback((planetKey: string, isManualTap = false) => {
-    // Determine lock duration: 1.2s for navigation, 2.0s for manual taps (calmed)
     const lockDuration = isManualTap ? 2000 : 1200;
     
-    setIsBusy(true); // Lock interaction immediately
-    if (isManualTap) setIsPulsing(true); // Enlarge during the tap narration
+    // 1. Singleton Audio Control: Stop any existing narration
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+    }
+
+    setIsBusy(true); 
+    if (isManualTap) setIsPulsing(true); 
     
     const voiceUrl = `${BASE_PATH}/voices/${lang}/${planetKey.toLowerCase()}.mp3`;
     const audio = new Audio(voiceUrl);
+    audioRef.current = audio; // Track this audio
     audio.volume = 1.0;
     audio.playbackRate = 0.75; 
     audio.play().catch(() => {
@@ -109,10 +133,12 @@ export default function SolarSystemExplorer() {
       }
     });
 
-    // Freeze to prevent doom-scrolling or doom-tapping
-    setTimeout(() => {
+    // 2. Lifecycle Managed Freeze
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    timeoutRef.current = setTimeout(() => {
       setIsBusy(false);
-      setIsPulsing(false); // Return to normal size after narration
+      setIsPulsing(false); 
+      timeoutRef.current = null;
     }, lockDuration);
   }, [lang]);
 
@@ -132,7 +158,14 @@ export default function SolarSystemExplorer() {
     const audio = new Audio(`${BASE_PATH}/voices/${lang}/${nextKey.toLowerCase()}.mp3`);
     audio.load();
 
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(timer);
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+    };
   }, [currentIndex, lang, currentBody.key, speak]);
 
   const handleInteraction = () => {
